@@ -49,7 +49,7 @@ Just include `nginx_source_install::mainline` in your node's `run_list`:
 
 ## License and Authors
 
-Authors: Melonsmasher
+Authors: Alex Markessinis
 
 License: [MIT](https://opensource.org/licenses/MIT)
 
