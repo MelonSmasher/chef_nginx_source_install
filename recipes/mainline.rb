@@ -21,7 +21,7 @@ end
 
 # Install stable Nginx
 def install_nginx(options_list)
-  if options_list.is_a?
+  if options_list.kind_of?(Array)
     options_list = options_list.join(' ')
   end
   options_list.strip!
@@ -39,7 +39,7 @@ end
 
 # Install bleeding edge Nginx
 def install_nginx_mainline(options_list)
-  if options_list.is_a?
+  if options_list.kind_of?(Array)
     options_list = options_list.join(' ')
   end
   options_list.strip!
