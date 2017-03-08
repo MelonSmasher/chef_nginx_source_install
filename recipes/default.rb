@@ -4,39 +4,59 @@
 #
 # MIT License
 #
-# Copyright (c) 2017 Alex Markessinis
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-#
 
-include NginxSourceInstall::Helpers
+# Update apt cache
+def apt_get_update()
+  execute 'apt_get_update' do
+    command 'apt-get update'
+  end
+end
+
+# Update yum cache
+def yum_makecache()
+  execute 'yum_makecache' do
+    command 'yum makecache'
+  end
+end
+
+# Install stable Nginx
+def install_nginx(options_list)
+  if options_list.is_a?
+    options_list = options_list.join(' ')
+  end
+  options_list.strip!
+  if options_list.empty?
+    execute 'install_nginx' do
+      command 'curl -sL https://raw.githubusercontent.com/MelonSmasher/NginxInstaller/master/nginx-install.sh | bash -s -- -a'
+      only_if
+    end
+  else
+    execute 'install_nginx' do
+      command "curl -sL https://raw.githubusercontent.com/MelonSmasher/NginxInstaller/master/nginx-install.sh | bash -s -- -a #{options_list}"
+    end
+  end
+end
+
+# Install bleeding edge Nginx
+def install_nginx_mainline(options_list)
+  if options_list.is_a?
+    options_list = options_list.join(' ')
+  end
+  options_list.strip!
+  options_list = '-x ' + options_list
+  install_nginx(options_list)
+end
 
 platform = node['platform_family']
 case platform
   when 'debian', 'ubuntu'
     apt_get_update
     package curl
-    install_nginx
+    install_nginx ''
   when 'rhel', 'centos'
     yum_makecache
     package curl
-    install_nginx
+    install_nginx ''
   else
     puts "#{platform} is not supported by this installer."
 end
