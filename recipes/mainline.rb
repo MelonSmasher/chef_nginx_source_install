@@ -51,11 +51,11 @@ platform = node['platform_family']
 case platform
   when 'debian', 'ubuntu'
     apt_get_update
-    package curl
+    package 'curl'
     install_nginx_mainline ''
   when 'rhel', 'centos'
     yum_makecache
-    package curl
+    package 'curl'
     install_nginx_mainline ''
   else
     puts "#{platform} is not supported by this installer."
