@@ -52,11 +52,25 @@ case platform
   when 'debian', 'ubuntu'
     apt_get_update
     package 'curl'
-    install_nginx ''
+    begin
+      install_nginx ''
+    rescue
+      log 'nginx install' do
+        message "Failed to install nginx"
+        level :warn
+      end
+    end
   when 'rhel', 'centos'
     yum_makecache
     package 'curl'
-    install_nginx ''
+    begin
+      install_nginx ''
+    rescue
+      log 'nginx install' do
+        message "Failed to install nginx"
+        level :warn
+      end
+    end
   else
     puts "#{platform} is not supported by this installer."
 end
