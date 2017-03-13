@@ -5,72 +5,88 @@
 # MIT License
 #
 
-# Update apt cache
-def apt_get_update()
-  execute 'apt_get_update' do
-    command 'apt-get update'
+# Install NGINX
+def install_nginx(cmd)
+  execute 'install_nginx' do
+    command "#{cmd}"
   end
 end
 
-# Update yum cache
-def yum_makecache()
-  execute 'yum_makecache' do
-    command 'yum makecache'
-  end
-end
 
-# Install stable Nginx
-def install_nginx(options_list)
-  if options_list.kind_of?(Array)
-    options_list = options_list.join(' ')
-  end
-  options_list.strip!
-  if options_list.empty?
-    execute 'install_nginx' do
-      command 'curl -sL https://raw.githubusercontent.com/MelonSmasher/NginxInstaller/master/nginx-install.sh | bash -s -- -a'
-      only_if
-    end
-  else
-    execute 'install_nginx' do
-      command "curl -sL https://raw.githubusercontent.com/MelonSmasher/NginxInstaller/master/nginx-install.sh | bash -s -- -a #{options_list}"
-    end
-  end
-end
-
-# Install bleeding edge Nginx
-def install_nginx_mainline(options_list)
-  if options_list.kind_of?(Array)
-    options_list = options_list.join(' ')
-  end
-  options_list.strip!
-  options_list = '-x ' + options_list
-  install_nginx(options_list)
-end
-
-platform = node['platform_family']
+platform = node['platform']
+# Make sure our platform is supported
 case platform
-  when 'debian', 'ubuntu'
-    apt_get_update
-    package 'curl'
-    begin
-      install_nginx ''
-    rescue
-      log 'nginx install' do
-        message "Failed to install nginx"
-        level :warn
-      end
+  when 'debian', 'ubuntu', 'redhat', 'centos'
+
+    # Init the command array
+    cmd = ['curl -sL https://raw.githubusercontent.com/MelonSmasher/NginxInstaller/master/nginx-install.sh | bash -s --']
+    # What features do we want to compile in?
+    features = node['nginx']['features']
+
+    # Compile with ALPN support for http2?
+    if features['alpn']
+      cmd.push('-a')
     end
-  when 'rhel', 'centos'
-    yum_makecache
-    package 'curl'
-    begin
-      install_nginx ''
-    rescue
-      log 'nginx install' do
-        message "Failed to install nginx"
-        level :warn
-      end
+
+    # Enable the mail module?
+    if features['mail']
+      cmd.push('-m')
     end
+
+    # Enable the vts module?
+    if features['vts']
+      cmd.push('-v')
+    end
+
+    # Enable the geoip module?
+    if features['geoip']
+      cmd.push('-g')
+    end
+
+    # Enable the pagespeed module?
+    if features['pagespeed']
+      cmd.push('-p')
+    end
+
+    # Enable the cache purge module?
+    if features['cache_purge']
+      cmd.push('-c')
+    end
+
+    # Enable the ldap auth module?
+    if features['ldap_auth']
+      cmd.push('-l')
+    end
+
+    # Should we install the mainline version instead of the stable version?
+    if node['nginx']['mainline']
+      cmd.push('-x')
+    end
+
+    # Are we forcing the install even if the version is the same?
+    if node['nginx']['force']
+      cmd.push('-f')
+    end
+
+    # If we are ignoring failures surround install command in a try catch
+    if node['nginx']['ignore_failure']
+      # Run in a try catch
+      begin
+        install_nginx cmd.join(' ')
+      rescue
+        log 'NGINX Installer: Script failure.' do
+          message "The installation script has failed, moving on..."
+          level :warn
+        end
+      end
+    else
+      # Run without failure protection
+      install_nginx cmd.join(' ')
+    end
+
   else
-    puts "#{platform} is not supported by this installer."
+    log 'NGINX Installer: Unsupported platform.' do
+      message "#{platform} is not supported by this installer."
+      level :warn
+    end
 end

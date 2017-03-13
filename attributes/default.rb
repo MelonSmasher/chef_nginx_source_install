@@ -1,0 +1,10 @@
+default['nginx']['features']['alpn'] = true
+default['nginx']['features']['mail'] = false
+default['nginx']['features']['vts'] = false
+default['nginx']['features']['geoip'] = false
+default['nginx']['features']['pagespeed'] = false
+default['nginx']['features']['cache_purge'] = false
+default['nginx']['features']['ldap_auth'] = false
+default['nginx']['mainline'] = false
+default['nginx']['force'] = false
+default['nginx']['ignore_failure'] = false
